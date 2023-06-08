@@ -11,6 +11,7 @@ class GameClient:
         self.map_height = 0
         self.player_id = 0
         self.game_state = None
+        self.running = True
 
     async def connect(self):
         self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
@@ -71,19 +72,13 @@ class GameClient:
                 print(f"Your move: {next_move}")
                 await self.move(next_move)
             elif packet_type == "die":
-                player_ids = map(int, args)
-                print(f"Players {', '.join(str(id))} died.")
-            elif packet_type == "message":
-                sender_id, message = int(args[0]), args[1]
-                print(f"Player {sender_id} says: {message}")
+                print(f"Player(s) {' '.join(args)} died.")
             elif packet_type == "win":
                 wins, losses = map(int, args)
                 print(f"You won! Wins: {wins}, Losses: {losses}")
-                break
             elif packet_type == "lose":
                 wins, losses = map(int, args)
                 print(f"You lost! Wins: {wins}, Losses: {losses}")
-                break
             elif packet_type == "error":
                 error = args[0]
                 print(f"Error: {error}")
@@ -95,11 +90,20 @@ class GameClient:
         await self.join(username, password)
         await self.start_game()
 
+    def run(self, username, password):
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_until_complete(self.play_game(username, password))
+        except KeyboardInterrupt:
+            print("\nGame ended.")
+        finally:
+            loop.close()
+
 # Usage
 host = '2001:67c:20a1:232:753b:18:538d:6a34'
 port = 4000
-username = "stupidbot"
+username = "MindMelt"
 password = "cheese"
 
 client = GameClient(host, port)
-asyncio.run(client.play_game(username, password))
+client.run(username, password)
