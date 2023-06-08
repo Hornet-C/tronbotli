@@ -68,6 +68,7 @@ class GameClient:
             elif packet_type == "tick":
                 print("Turn completed. It's your move.")
                 next_move = self.determine_next_move()
+                print(f"Your move: {next_move}")
                 await self.move(next_move)
             elif packet_type == "die":
                 player_ids = map(int, args)
