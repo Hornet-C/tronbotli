@@ -122,6 +122,9 @@ class GameClient:
             elif packet_type == "error":
                 error = args[0]
                 print(f"Error: {error}")
+            elif packet_type == "message":
+                sender_id, message = int(args[0]), args[1]
+                print(f"Player {sender_id} says: {message}")
             else:
                 print(f"Unknown packet type: {packet_type}")
 
