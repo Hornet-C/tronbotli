@@ -52,8 +52,6 @@ class GameClient:
         return random.choice(directions)
 
     async def start_game(self):
-        self.initialize_game_state()
-
         while True:
             packet = await self.receive_packet()
             packet_type, *args = packet.split("|")
@@ -62,6 +60,7 @@ class GameClient:
                 print(f"Message of the day: {motd_message}")
             elif packet_type == "game":
                 self.map_width, self.map_height, self.player_id = map(int, args)
+                self.initialize_game_state()
                 print(f"New game started! Map size: {self.map_width}x{self.map_height}, Your player ID: {self.player_id}")
             elif packet_type == "pos":
                 player_id, x, y = map(int, args)
@@ -79,9 +78,11 @@ class GameClient:
             elif packet_type == "win":
                 wins, losses = map(int, args)
                 print(f"You won! Wins: {wins}, Losses: {losses}")
+                break
             elif packet_type == "lose":
                 wins, losses = map(int, args)
                 print(f"You lost! Wins: {wins}, Losses: {losses}")
+                break
             elif packet_type == "error":
                 error = args[0]
                 print(f"Error: {error}")
@@ -101,4 +102,3 @@ password = "cheese"
 
 client = GameClient(host, port)
 asyncio.run(client.play_game(username, password))
-
