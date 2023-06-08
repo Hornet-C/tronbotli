@@ -1,6 +1,7 @@
 import asyncio
 import random
 
+
 class GameClient:
     def __init__(self, host, port):
         self.host = host
@@ -39,10 +40,11 @@ class GameClient:
         # Create an empty game state with the map dimensions
         self.game_state = [[0] * self.map_width for _ in range(self.map_height)]
 
-        # Place the player's initial position in the game state
+        # Place the player's initial position in the game state if it's within the map boundaries
         initial_position = (self.map_width // 2, self.map_height // 2)
-        self.game_state[initial_position[1]][initial_position[0]] = self.player_id
-
+        if 0 <= initial_position[0] < self.map_width and 0 <= initial_position[1] < self.map_height:
+            self.game_state[initial_position[1]][initial_position[0]] = self.player_id
+            
     def update_game_state(self, player_id, x, y):
         self.game_state[y][x] = player_id
 
@@ -61,7 +63,9 @@ class GameClient:
             elif packet_type == "game":
                 self.map_width, self.map_height, self.player_id = map(int, args)
                 self.initialize_game_state()
-                print(f"New game started! Map size: {self.map_width}x{self.map_height}, Your player ID: {self.player_id}")
+                print(
+                    f"New game started! Map size: {self.map_width}x{self.map_height}, Your player ID: {self.player_id}"
+                )
             elif packet_type == "pos":
                 player_id, x, y = map(int, args)
                 self.update_game_state(player_id, x, y)
@@ -95,11 +99,13 @@ class GameClient:
         await self.join(username, password)
         await self.start_game()
 
-# Usage
-host = '2001:67c:20a1:232:753b:18:538d:6a34'
-port = 4000
-username = "stupidbot"
-password = "cheese"
 
-client = GameClient(host, port)
-asyncio.run(client.play_game(username, password))
+# Usage
+if __name__ == "__main__":
+    host = "2001:67c:20a1:232:753b:18:538d:6a34"
+    port = 4000
+    username = "stupidbot_2"
+    password = "cheese"
+
+    client = GameClient(host, port)
+    asyncio.run(client.play_game(username, password))
