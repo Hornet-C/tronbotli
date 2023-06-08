@@ -63,6 +63,8 @@ class GameEnvironment(gym.Env):
 
     def reset(self):
         # Reset the game environment
+        print(f"Current loss/reward function state: {self.client.loss_reward_state}")
+        # self.client.chat(f"Current loss/reward function state: {self.client.loss_reward_state}")
         self.client = GameClient(self.host, self.port)
 
         # Connect and join the game

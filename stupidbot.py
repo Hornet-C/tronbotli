@@ -53,7 +53,9 @@ class GameClient:
         current_x, current_y = self.get_player_position(self.player_id)
         if current_x is None or current_y is None:
             # Player's position is unknown
-            return random.choice(["up", "right", "down", "left"])
+            choice = random.choice(["up", "right", "down", "left"])
+            print(f"Player's position is unknown, moving random {choice}")
+            return choice
 
         # Generate a list of valid directions to move
         valid_directions = []
