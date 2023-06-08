@@ -1,6 +1,7 @@
 import asyncio
 import random
 
+
 class GameClient:
     def __init__(self, host, port):
         self.host = host
@@ -48,9 +49,37 @@ class GameClient:
         self.game_state[y][x] = player_id
 
     def determine_next_move(self):
-        # Generate a random direction (up, right, down, left)
-        directions = ["up", "right", "down", "left"]
-        return random.choice(directions)
+        current_x, current_y = self.get_player_position(self.player_id)
+        if current_x is None or current_y is None:
+            # Player's position is unknown
+            return random.choice(["up", "right", "down", "left"])
+
+        # Generate a list of valid directions to move
+        valid_directions = []
+        if current_y > 0 and self.game_state[current_y - 1][current_x] == 0:
+            valid_directions.append("up")
+        if current_y < self.map_height - 1 and self.game_state[current_y + 1][
+            current_x] == 0:
+            valid_directions.append("down")
+        if current_x > 0 and self.game_state[current_y][current_x - 1] == 0:
+            valid_directions.append("left")
+        if current_x < self.map_width - 1 and self.game_state[current_y][
+            current_x + 1] == 0:
+            valid_directions.append("right")
+
+        if valid_directions:
+            # Choose a random valid direction to move
+            return random.choice(valid_directions)
+        else:
+            # No valid directions available, stay in place
+            return "stay"
+
+    def get_player_position(self, player_id):
+        for y in range(self.map_height):
+            for x in range(self.map_width):
+                if self.game_state[y][x] == player_id:
+                    return x, y
+        return None, None
 
     async def start_game(self):
         while True:
@@ -62,8 +91,17 @@ class GameClient:
             elif packet_type == "game":
                 self.map_width, self.map_height, self.player_id = map(int, args)
                 self.initialize_game_state()
-                print(f"New game started! Map size: {self.map_width}x{self.map_height}, Your player ID: {self.player_id}")
-            elif packet_type == "pos":
+                print(
+                    f"New game started! Map size: {self.map_width}x{self.map_height}, Your player ID: {self.player_id}")
+                break  # Exit the loop and proceed with the other steps
+            elif packet_type == "message":
+                sender_id, message = int(args[0]), args[1]
+                print(f"Player {sender_id} says: {message}")
+
+        while True:
+            packet = await self.receive_packet()
+            packet_type, *args = packet.split("|")
+            if packet_type == "pos":
                 player_id, x, y = map(int, args)
                 self.update_game_state(player_id, x, y)
             elif packet_type == "tick":
@@ -76,14 +114,19 @@ class GameClient:
             elif packet_type == "win":
                 wins, losses = map(int, args)
                 print(f"You won! Wins: {wins}, Losses: {losses}")
+                break  # Exit the loop and wait for the next "game" packet
             elif packet_type == "lose":
                 wins, losses = map(int, args)
                 print(f"You lost! Wins: {wins}, Losses: {losses}")
+                break  # Exit the loop and wait for the next "game" packet
             elif packet_type == "error":
                 error = args[0]
                 print(f"Error: {error}")
             else:
                 print(f"Unknown packet type: {packet_type}")
+
+        # Wait for the next "game" packet before starting the next game
+        await self.start_game()
 
     async def play_game(self, username, password):
         await self.connect()
@@ -98,6 +141,7 @@ class GameClient:
             print("\nGame ended.")
         finally:
             loop.close()
+
 
 # Usage
 host = '2001:67c:20a1:232:753b:18:538d:6a34'
